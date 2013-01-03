@@ -123,13 +123,9 @@ setInterval(function () {
 fu.listen(Number(process.env.PORT || PORT), HOST);
 
 fu.get("/", fu.staticHandler("index.html"));
-//fu.get("/bot", fu.staticHandler("bot.html"));
 fu.get("/style.css", fu.staticHandler("style.css"));
 fu.get("/client.js", fu.staticHandler("client.js"));
 fu.get("/jquery-1.2.6.min.js", fu.staticHandler("jquery-1.2.6.min.js"));
-//fu.get("/jquery_timer.js", fu.staticHandler("jquery_timer.js"));
-//fu.get("/strings.js", fu.staticHandler("strings.js"));
-//fu.get("/bot_mode.js", fu.staticHandler("bot_mode.js"));
 
 fu.get("/who", function (req, res) {
   var nicks = [];

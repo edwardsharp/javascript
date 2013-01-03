@@ -184,7 +184,8 @@ util = {
 //used to keep the most recent messages visible
 function scrollDown () {
   
-  // 100000000000000000 is too many for chrome, 10000000 seemz to be maxx.
+  // e#: 100000000000000000 is too many for chrome, 10000000 seemz to be maxx.
+  // e#: is there a different elem to scroll?
   window.scrollBy(0, 10000000);
   $("#entry").focus();
 }
