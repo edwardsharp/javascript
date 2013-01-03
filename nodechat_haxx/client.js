@@ -183,9 +183,12 @@ util = {
 
 //used to keep the most recent messages visible
 function scrollDown () {
-  window.scrollBy(0, 100000000000000000);
+  
+  // 100000000000000000 is too many for chrome, 10000000 seemz to be maxx.
+  window.scrollBy(0, 10000000);
   $("#entry").focus();
 }
+
 
 //inserts an event into the stream for display
 //the event may be a msg, join or part type
@@ -198,23 +201,21 @@ function addMessage (from, text, time, _class) {
   // sanitize
   text = util.toStaticHTML(text);
 
-  //do NOT show the message if it is not prefaced with our own nickname
+  //flag the message if it's got the user's nickname in it...
   var nick_re = new RegExp(CONFIG.nick);
-  
-  if (!botMode) {
-    if (!nick_re.exec(text)) {
-      return;
-    }
+  var bool_has_own_nick = false;
+  if (nick_re.exec(text)) {
+      bool_has_own_nick = true;
   }
+  
     
-    
-  /*if (time == null) {
+  if (time == null) {
     // if the time is null or undefined, use the current time.
     time = new Date();
   } else if ((time instanceof Date) === false) {
     // if it's a timestamp, interpret it
     time = new Date(time);
-  }*/
+  }
 
   //every message you see is actually a table with 3 cols:
   //  the time,
@@ -228,10 +229,10 @@ function addMessage (from, text, time, _class) {
 
   // replace URLs with links
   text = text.replace(util.urlRE, '<a target="_blank" href="$&">$&</a>');
-
-  var content = '<tr>'
-              //+ '  <td class="date">' + util.timeString(time) + '</td>'
-              //+ '  <td class="nick">' + util.toStaticHTML(from) + '</td>'
+  var highlight_class = bool_has_own_nick ? 'highlight' : '';
+  var content = '<tr class="'+highlight_class+'">'
+              + '  <td class="date">' + util.timeString(time) + '</td>'
+              + '  <td class="nick">' + util.toStaticHTML(from) + '</td>'
               + '  <td class="msg-text">' + text  + '</td>'
               + '</tr>'
               ;
@@ -323,7 +324,7 @@ function longPoll (data) {
          , dataType: "json"
          , data: { since: CONFIG.last_message_time, id: CONFIG.id }
          , error: function () {
-             addMessage("", "long poll error. trying again...", new Date(), "error");
+             addMessage("", "connection timeout. attempting to reconnect...", new Date(), "error");
              transmission_errors += 1;
              //don't flood the servers on error, wait 10 seconds before retrying
              setTimeout(longPoll, 10*1000);
@@ -448,13 +449,12 @@ $(document).ready(function() {
 
   $("#usersLink").click(outputUsers);
   
-  $("#hideLink").click(function() {
-    $("#toolbar").hide();
+  $(".togg_").toggle();
+
+  $("#status").click(function() {
+    $(".togg_").toggle();
   });
-  
-  $("#log").click(function() {
-    $("#toolbar").toggle();
-  });
+
   //try joining the chat when the user clicks the connect button
   $("#connectButton").click(function () {
     //lock the UI while waiting for a response
@@ -463,14 +463,14 @@ $(document).ready(function() {
 
     //dont bother the backend if we fail easy validations
     if (nick.length > 50) {
-      alert("Nick too long. 50 character max.");
+      alert("nickname too long! 50 character max, plz.");
       showConnect();
       return false;
     }
 
     //more validations
     if (/[^\w_\-^!]/.exec(nick)) {
-      alert("Bad character in nick. Can only have letters, numbers, and '_', '-', '^', '!'");
+      alert("sketchy characterz! can only have letterz, numberz, and '_', '-', '^', '!'");
       showConnect();
       return false;
     }
@@ -482,7 +482,7 @@ $(document).ready(function() {
            , url: "/join"
            , data: { nick: nick }
            , error: function () {
-               alert("error connecting to server");
+               alert("sorry! error connecting to server!");
                showConnect();
              }
            , success: onConnect

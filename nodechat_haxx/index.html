@@ -21,7 +21,7 @@
         <form action="#">
           <fieldset> 
 
-            <input id="nickInput" class="text"type="text" name="nick" value=""/>
+            <input id="nickInput" class="text"type="text" name="nick" placeholder="nickname" value=""/>
             <div class="br">&nbsp;</div>
             <input id="connectButton" class="button" type="submit" name="" value="join"/>
 
@@ -184,11 +184,11 @@
       </div>
       <div id="toolbar">
         <ul id="status">
-          <li><a id="usersLink" href="#">666 users</a></li>
-          <li><a id="botMode" href="#">BOT</a></li>
-          <li><a id="hideLink" href="#">H</a></li>
-          <li>uptime: <span id="uptime">?</span></li>
-          <li>memory: <span id="rss">?</span>mb RSS</li>
+          <li>&nbsp;<a class="togg_" id="usersLink" href="#" title="click to list users." >666 users</a></li>
+          <li><span class="togg_" id="uptime" title="uptime">?</span></li>
+          <li><span class="togg_" id="rss" title="memory">?</span><span class="togg_">mb</span></li>
+          <li><a class="togg_" id="hideLink" href="#" title="click on chat text to return visability.">hide</a></li>
+          <li id="status_togg">&nbsp;</li>
         </ul>
         <input tabindex="1" type="text" id="entry"/>
       </div>

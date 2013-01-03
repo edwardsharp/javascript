@@ -27,18 +27,18 @@ var channel = new function () {
     var m = { nick: nick
             , type: type // "msg", "join", "part"
             , text: text
-            //, timestamp: (new Date()).getTime()
+            , timestamp: (new Date()).getTime()
             };
-
+    var timestamp = new Date();
     switch (type) {
       case "msg":
-        sys.puts("<" + nick + "> " + text);
+        sys.puts(timestamp + "<" + nick + "> " + text);
         break;
       case "join":
-        sys.puts(nick + " join");
+        sys.puts(timestamp + "<" + nick + ">" + " JOIN");
         break;
       case "part":
-        sys.puts(nick + " part");
+        sys.puts(timestamp + "<" + nick + ">" + " PART");
         break;
     }
 
@@ -123,13 +123,13 @@ setInterval(function () {
 fu.listen(Number(process.env.PORT || PORT), HOST);
 
 fu.get("/", fu.staticHandler("index.html"));
-fu.get("/bot", fu.staticHandler("bot.html"));
+//fu.get("/bot", fu.staticHandler("bot.html"));
 fu.get("/style.css", fu.staticHandler("style.css"));
 fu.get("/client.js", fu.staticHandler("client.js"));
 fu.get("/jquery-1.2.6.min.js", fu.staticHandler("jquery-1.2.6.min.js"));
-fu.get("/jquery_timer.js", fu.staticHandler("jquery_timer.js"));
-fu.get("/strings.js", fu.staticHandler("strings.js"));
-fu.get("/bot_mode.js", fu.staticHandler("bot_mode.js"));
+//fu.get("/jquery_timer.js", fu.staticHandler("jquery_timer.js"));
+//fu.get("/strings.js", fu.staticHandler("strings.js"));
+//fu.get("/bot_mode.js", fu.staticHandler("bot_mode.js"));
 
 fu.get("/who", function (req, res) {
   var nicks = [];
@@ -146,12 +146,12 @@ fu.get("/who", function (req, res) {
 fu.get("/join", function (req, res) {
   var nick = qs.parse(url.parse(req.url).query).nick;
   if (nick == null || nick.length == 0) {
-    res.simpleJSON(400, {error: "Bad nick."});
+    res.simpleJSON(400, {error: "bad nick, bad!"});
     return;
   }
   var session = createSession(nick);
   if (session == null) {
-    res.simpleJSON(400, {error: "Nick in use"});
+    res.simpleJSON(400, {error: "somebody already has that nickname!"});
     return;
   }
 
@@ -177,7 +177,7 @@ fu.get("/part", function (req, res) {
 
 fu.get("/recv", function (req, res) {
   if (!qs.parse(url.parse(req.url).query).since) {
-    res.simpleJSON(400, { error: "Must supply since parameter" });
+    res.simpleJSON(400, { error: "need a param!" });
     return;
   }
   var id = qs.parse(url.parse(req.url).query).id;
@@ -201,7 +201,7 @@ fu.get("/send", function (req, res) {
 
   var session = sessions[id];
   if (!session || !text) {
-    res.simpleJSON(400, { error: "No such session id" });
+    res.simpleJSON(400, { error: "dunno!" });
     return;
   }
 
