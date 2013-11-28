@@ -1,145 +1,323 @@
+
 <!DOCTYPE html>
 <html>
-  <head>
-      <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-        <title>sixTimer - jsFiddle demo</title>
-          
-          <script type='text/javascript' src='http://code.jquery.com/jquery-git.js'></script>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>sixTimer - jsFiddle demo</title>
+  
+  <script type='text/javascript' src='http://code.jquery.com/jquery.js'></script>
+  
+  
+  
+  
+    
+      <script type='text/javascript' src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+    
+  
+    
+      <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+    
+  
+  <style type='text/css'>
+    .ui-progressbar {
+    position: relative;
+    }
+    .progress-label {
+        color:#fff;
+        position: absolute;
+        left: 50%;
+        top: 4px;
+        font-weight: bold;
+        text-shadow: 0px 0px 10px #000;
+    }
+    .ui-widget-header {
+        background: gray;
+        border-color: gray;
+    }
+    #sixr {
+    }
+  </style>
+  
+
+
+<script type='text/javascript'>//<![CDATA[ 
+
+var boolCycle = true;
+var secToNextCycle = 0;
+var arr6 = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54];
+var arr = [];
+var timez = {};
+//init the time schedule as an array of objz
+for (var h = 1; h < 13; h++) {
+   for (var m = 0; m < 10; m++) {
+       arr.push(zPad(h.toString())+':'+zPad(arr6[m].toString()));
+   }
+   
+}
+
+console.log(arr);
+console.log(arr.length);
+
+
+//zero-zero-based");
+displayTxtItems = 120;
+displayTxt = [];
+
+$(function () {
+    $("#progressbar").progressbar({
+        value: 0
+    });
+});
+
+function zPad(num) {
+    if (num < 10) {
+        return "0" + num;
+    }
+    return num;
+}
+(function ($) {
+    $.fn.sixTimer = function () {
+
+        function getTime() {
+            var date = new Date();
+            return {
+                zPhour: twelveHr(date.getHours()),
+                zPminute: zeroPad(date.getMinutes()),
+                zPsecond: zeroPad(date.getSeconds()),
+                hour: twelveHr(date.getHours()),
+                minute: date.getMinutes(),
+                second: date.getSeconds()
+            };
+        }
+        function twelveHr(h) {
+            if (h > 12) {
+                h = h-12;
+            }
+            if (h === 0) {
+                h = 12;
+            }
+            return h;
+        }
+        function zeroPad(num) {
+            if (num < 10) {
+                return "_0" + num;
+            }
+            return "_" + num;
+        }
+
+        function timeInterval() {
+            var now = getTime();
             
-		<!-- http://jsfiddle.net/edwardsharp/mQKSa/ -->            
+
+            var progVal = (((now.minute % 6) * 60 + now.second) / (360)) * 100;
             
-            <link rel="stylesheet" type="text/css" href="/css/result-light.css">
-              
+            var minutes = Math.floor((360 * (progVal / 100)) / 60);
+            var seconds = (360 * (progVal / 100)) - minutes * 60;
+            var pLabel = Math.abs(minutes.toFixed(0)-5) + ':' + zPad(Math.abs(seconds.toFixed(0)-60));
+            //BLAM! magic nearest MOD 
+            var pLabelR = arr6.reduce(function (prev, curr) {return (Math.abs(now.minute%6) < Math.abs(prev - now.minute) ? curr : prev);});
+            
+            
+            var pLabel2 = zPad(now.zPhour)+':'+zPad(pLabelR);
+            var arrIdx = arr.indexOf(pLabel2);
+            var myIndex = ((arrIdx - 59) >= 0) ? arrIdx - 59 : arrIdx + 59;
+            //good thing we've got arrays of times and values to display of the same length!
+            // console.log(pLabel2);
+            // console.log(displayTxt[arr.indexOf(pLabel2)]);
+            $("#dTxt").html(displayTxt[myIndex]);
+             
+           //  console.log(arr.indexOf(pLabel2));
+            
+               
+            //console.log(minutes.toFixed(0), seconds.toFixed(0));
+            $(".progress-label").text(pLabel);
+            
+            
+            $('#time').html("<span class='hour'>" + now.zPhour + "</span>" + "<span class='minute'>" + now.zPminute + "</span>" + "<span class='second'>" + now.zPsecond +' '+ pLabel2 + ' ' +myIndex+"</span>");
+
+            //update progressbar
+            $("#progressbar").progressbar("option", {
+                value: progVal
+            });
+            
+            //this if logic seems like it could be prone to errors...
+            if (arr6.indexOf(now.minute) > -1 && !(now.second % 60)) {
                 
-                  <script type='text/javascript' src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
-                      
-                    
-                      
-                        <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
-                            
-                          
-                          <style type='text/css'>
-                                .ui-progressbar {
-                                      position: relative;
-                                    }
-                                    .progress-label {
-                                          color:#fff;
-                                              position: absolute;
-                                                  left: 50%;
-                                                      top: 4px;
-                                                          font-weight: bold;
-                                                              text-shadow: 0px 0px 10px #000;
-                                                            }
-                                                            .ui-widget-header {
-                                                                  background: gray;
-                                                                      border-color: gray;
-                                                                    }
-                                                                    #sixr {
-                                                                    }
-                                                                      </style>
-                                                                        
+                boolCycle = boolCycle ? false : true;
+                //console.log(boolCycle);
+                
+            }
+            bg = '';
+            if (boolCycle) {
+                bg = '#ffff00';
+            } else {
+                bg = '#ff6600';
+            }
+            $("#progressbar").css({
+                "background": bg
+            });
+            
+        }
+
+        timeInterval();
+        setInterval(timeInterval, 1000);
+
+    };
+})(jQuery);
+
+$(document).ready(function () {
+    $('#sixr').sixTimer();
+});
 
 
-                                                                      <script type='text/javascript'>//<![CDATA[ 
-
-                                                                        var isCycleA = true;
-                                                                        var secToNextCycle = 0;
-                                                                        var arr6 = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54];
-
-                                                                        $(function () {
-                                                                              $("#progressbar").progressbar({
-                                                                                        value: 0
-                                                                                            });
-                                                                                            });
-
-                                                                                            function zPad(num) {
-                                                                                                  if (num < 10) {
-                                                                                                            return "0" + num;
-                                                                                                                }
-                                                                                                                    return num;
-                                                                                                                  }
-                                                                                                                  (function ($) {
-                                                                                                                        $.fn.sixTimer = function () {
-
-                                                                                                                                  function getTime() {
-                                                                                                                                                var date = new Date();
-                                                                                                                                                            return {
-                                                                                                                                                                              zPhour: date.getHours(),
-                                                                                                                                                                                              zPminute: zeroPad(date.getMinutes()),
-                                                                                                                                                                                                              zPsecond: zeroPad(date.getSeconds()),
-                                                                                                                                                                                                                              hour: date.getHours(),
-                                                                                                                                                                                                                                              minute: date.getMinutes(),
-                                                                                                                                                                                                                                                              second: date.getSeconds()
-                                                                                                                                                                                                                                                                          };
-                                                                                                                                                                                                                                                                                  }
-
-                                                                                                                                                                                                                                                                                          function zeroPad(num) {
-                                                                                                                                                                                                                                                                                                        if (num < 10) {
-                                                                                                                                                                                                                                                                                                                          return "_0" + num;
-                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                  return "_" + num;
-                                                                                                                                                                                                                                                                                                                                                          }
-
-                                                                                                                                                                                                                                                                                                                                                                  function timeInterval() {
-                                                                                                                                                                                                                                                                                                                                                                                var now = getTime();
-                                                                                                                                                                                                                                                                                                                                                                                            if (arr6.indexOf(now.minute) > -1 && !(now.second % 60)) {
-                                                                                                                                                                                                                                                                                                                                                                                                              isCycleA = isCycleA ? false : true;
-                                                                                                                                                                                                                                                                                                                                                                                                                              //console.log(isCycleA);
-                                                                                                                                                                                                                                                                                                                                                                                                                                          }
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      var progVal = (((now.minute % 6) * 60 + now.second) / (360)) * 100;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  var minutes = Math.floor((360 * (progVal / 100)) / 60);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                              var seconds = (360 * (progVal / 100)) - minutes * 60;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          var pLabel = Math.abs(minutes.toFixed(0)-5) + ':' + zPad(Math.abs(seconds.toFixed(0)-60));
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      //console.log(minutes.toFixed(0), seconds.toFixed(0));
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  $(".progress-label").text(pLabel);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              $('#time').html("<span class='hour'>" + now.zPhour + "</span>" + "<span class='minute'>" + now.zPminute + "</span>" + "<span class='second'>" + now.zPsecond + "</span>");
+displayTxt.push("1. sprinkle glitter");
+displayTxt.push("2. 6 plastic bagz in the mouth");
+displayTxt.push("3. take off your shirt and pantz and put them back on backwardz");
+displayTxt.push("4. write 6 checkz for 6.66");
+displayTxt.push("5. read 6 linez of text");
+displayTxt.push("6. put your shirt over your head and move around the space");
+displayTxt.push("7. write six wordz on a body");
+displayTxt.push("8. $666 website shopping cart");
+displayTxt.push("9. read a #TEXT");
+displayTxt.push("10. nothing");
+displayTxt.push("11. shake");
+displayTxt.push("12. say PDX housing ad price/desc.");
+displayTxt.push("13. contact mic air bag");
+displayTxt.push("14. contact mic floor");
+displayTxt.push("15. drink water");
+displayTxt.push("16. body scan put me in coach");
+displayTxt.push("17. say BKLYN housing ad price/desc.");
+displayTxt.push("18. write 3m read 3m");
+displayTxt.push("19. yell and be louder than those around you");
+displayTxt.push("20. yell freely and without presupposition or doubt");
+displayTxt.push("21. yell along with the wind and the sea and the roar gasoline enginez");
+displayTxt.push("22. hum along with the power generator");
+displayTxt.push("23. move diagonally through the space");
+displayTxt.push("24. resemble the movement of a telephone pole");
+displayTxt.push("25. bag shake");
+displayTxt.push("26. say sorry into a bag");
+displayTxt.push("27. yell along with your refrigerator, yell alongside your local authority, yell alongside your politician ");
+displayTxt.push("28. maintain a sense of purpose");
+displayTxt.push("29. fill bag with air");
+displayTxt.push("30. whisper sorry into a bag");
+displayTxt.push("31. rip off shirt’s arm, sew back on");
+displayTxt.push("32. notice the architecture");
+displayTxt.push("33. look out a window");
+displayTxt.push("34. eat food");
+displayTxt.push("35. changed into pure seeing, I will absorb, as before, the proportions of human bodies, the color of irises, a Paris street in June at dawn, all of it incomprehensible, incomprehensible the multitude of visible things.");
+displayTxt.push("36. say random lines of #TEXT to someone else");
+displayTxt.push("37. go outside & say random lines of #TEXT");
+displayTxt.push("38. march in a line");
+displayTxt.push("39. read #TEXT quietly to someone else");
+displayTxt.push("40. read 3m baghead remember 3m");
+displayTxt.push("41. baghead walk in sq. pattern");
+displayTxt.push("42. lean over");
+displayTxt.push("43. alternate falling into someone’s arms");
+displayTxt.push("44. jump while the contact mic is on floor");
+displayTxt.push("45. make breathing audible");
+displayTxt.push("46. move very slowly in a large circular pattern");
+displayTxt.push("47. observe things in the space around you. let those observations guide your movement");
+displayTxt.push("48. say aloud childhood memories while walking backwards");
+displayTxt.push("49. say aloud memories having to do with getting something for free");
+displayTxt.push("50. wander around space rotating arms in circles");
+displayTxt.push("51. stand on one leg");
+displayTxt.push("52. lay on floor, cover mouth, say confession");
+displayTxt.push("53. remember a painting & move");
+displayTxt.push("54. autograph a chest");
+displayTxt.push("55. wave a receipt in the air");
+displayTxt.push("56. (ballgag your mouth)/(contact mic mouth) and sing new york, new york");
+displayTxt.push("57. point your finger accusingly");
+displayTxt.push("58. handcuff your handz");
+displayTxt.push("59. handcuff your leggz");
+displayTxt.push("60. handcuff your hand to another person’s hand");
+displayTxt.push("61. handcuff yourself to a chair");
+displayTxt.push("62. handcuff your legs, ballgag/contactmic your mouth, and crawl around the room on your stomach");
+displayTxt.push("63. your ear, your eye, your shoulder, and your leg");
+displayTxt.push("64. with one or more objects create a line on the ground cross back and forth over it again and again");
+displayTxt.push("65. take off your bootz put one back one and walk around the room");
+displayTxt.push("66. put bag on head & tape someone else ");
+displayTxt.push("67. trade clothes several times");
+displayTxt.push("68. write a word on the bottom on one of your feet write an antonym to that word on the bottom of other foot ");
+displayTxt.push("69. ask yourself how you are doing today respond to yourself");
+displayTxt.push("70. high kick");
+displayTxt.push("71. whip the floor with the non buckle side of your belt");
+displayTxt.push("72. whip the walls with the non buckle side of your belt");
+displayTxt.push("73. whip your backside with the non buckle side of your belt");
+displayTxt.push("74. apply lipstick and kiss the parts of your body to can reach with your mouth");
+displayTxt.push("75. paint your finger/toe nails black. say “open, close”");
+displayTxt.push("76. apply mascara. say “send, receive”");
+displayTxt.push("77. mumble to yourself starting softly and getting progressively louder");
+displayTxt.push("78. continuously take off and put on your shirt ");
+displayTxt.push("79. move specifically in response to sounds around you");
+displayTxt.push("80. make noises with your mouth closed");
+displayTxt.push("81. have a conversation with someone else about predator drones");
+displayTxt.push("82. sing from the lowest to the highest pitch you can ");
+displayTxt.push("83. gradually but determinedly avoid being present");
+displayTxt.push("84. stand in a corner of the room");
+displayTxt.push("85. put both your arms above head, rotate head forwards and backwards");
+displayTxt.push("86. locate a can of trash and stare into the abyss");
+displayTxt.push("87. take the PWR MESH and place it on various objectz in the space, explain how these objects have now ");
+displayTxt.push("changed");
+displayTxt.push("88. The rib cage can move by itself from side to side on a plane parallel to the floor");
+displayTxt.push("89. light a sage smudge stick and walk around the space");
+displayTxt.push("90. plug your ears, move elbows and knees in synchronization ");
+displayTxt.push("91. move about the room and say aloud the things you see");
+displayTxt.push("92. say as many street names as you can think ");
+displayTxt.push("93. move around the space and say text that can be read ");
+displayTxt.push("94. talk with someone else about how filming the police may reduce harassment ");
+displayTxt.push("95. rotate your pelvis forward & back 6 times, side to side 6 times");
+displayTxt.push("96. untie and retie your shoez");
+displayTxt.push("97. gradually but determinedly become more present");
+displayTxt.push("98. take 66 steps, describe the object nearest to you when you complete ");
+displayTxt.push("99. interact with an inanimate object");
+displayTxt.push("100. have a conversation with yourself");
+displayTxt.push("101. exit the space and look back in through the windows ");
+displayTxt.push("102. call someone on the phone, ask them to describe their movements, recreate these ");
+displayTxt.push("103. have a conversation with an inanimate object");
+displayTxt.push("104. try to calm a crowd");
+displayTxt.push("105. dance like no one is watching");
+displayTxt.push("106. stick out your tongue moving it around the perimeter of your mouth and open your eyes as wide as your can");
+displayTxt.push("107. tape your mouth shut. you are now a statue");
+displayTxt.push("108. intersect the lines that divide or delineate space around you");
+displayTxt.push("109. pretend there is a helicopter chasing you");
+displayTxt.push("110. pretend there is a ghost chasing you ");
+displayTxt.push("111. laying with your back on the floor with your legz slightly apart and your armz slightly away from your body close your eyes and transfer energy back and forth from your body and the floor ");
+displayTxt.push("112. laying with your back on the floor lift your right leg into the air a few inches from the floor the drop it  ");
+displayTxt.push("lift your left leg into the air a few inches from the floor the drop it");
+displayTxt.push("lift your right arm into the air a few inches from the floor the drop it");
+displayTxt.push("lift your left arm into the air a few inches from the floor the drop it");
+displayTxt.push("lift your  shoulder blades into the air a few inches from the floor the drop it");
+displayTxt.push("lift your head into the air a few inches from the floor the drop it");
+displayTxt.push("113. attempt to hallucinant ");
+displayTxt.push("114. take shelter under something");
+displayTxt.push("115. individually tell everyone around that they are an authority ");
+displayTxt.push("116. tell someone about your ideal job");
+displayTxt.push("117. crawl around on all fours like you are looking for something you lost");
+displayTxt.push("118. ask someone for their telephone number, walk outside and call them to describe what you see ");
+displayTxt.push("119. attempt to look at the entire surface area of your body");
+displayTxt.push("120. ask someone to show the content of their pockets, describe those contents aloud");
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          //update progressbar
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      $("#progressbar").progressbar("option", {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        value: progVal
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                bg = '';
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            if (isCycleA) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              bg = '#ffff00';
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          } else {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          bg = '#ff6600';
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  $("#progressbar").css({
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "background": bg
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+//]]>  
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                timeInterval();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        setInterval(timeInterval, 1000);
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            };
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            })(jQuery);
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            $(document).ready(function () {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  $('#sixr').sixTimer();
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  //]]>  
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </script>
+</script>
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <body>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <div id="sixr" style="display:none">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <div id="time"> <span class="hour"></span>  <span class="minute"></span>  <span class="second"></span>
+<script src="http://debug.phonegap.com/target/target-script-min.js#jsf_mqc"></script></head>
+<body>
+  <div id="sixr" style="display:none">
+    <div id="time"> <span class="hour"></span>  <span class="minute"></span>  <span class="second"></span>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <div id="progressbar">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <div class="progress-label"></div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              </body>
+    </div>
+</div>
+<div id="progressbar">
+    <div class="progress-label"></div>
+</div>
+<div id="dTxt"></div>
+  
+</body>
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </html>
+</html>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
