@@ -1,0 +1,15 @@
+{
+  "name": "dmx_ws",
+  "version": "0.0.1",
+  "description": "web interface for dmx controll via raspberry pi and uDMX",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "3dwardsharp",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "bower": "^1.8.0",
+    "ws": "^2.2.3"
+  }
+}

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="bower_components/nouislider/distribute/nouislider.min.js"></script>
+<script src="bower_components/underscore/underscore-min.js"></script>
+<script src="local_obj.js"></script>
+<link rel="stylesheet" type="text/css" href="bower_components/nouislider/distribute/nouislider.min.css" />
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+
+</head>
+
+<body>
+<div id="dmxWs">
+</div>
+</body>
+<style>
+html, body{
+  margin:0;
+  padding:0;
+  font: monospace;
+  background-color: black;
+  color: white;
+}
+body * {
+  color: white;
+}
+
+html, body, #dmxWs {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  overflow: hidden;
+}
+
+#dmxWs{
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  /*height: 100%;*/
+}
+.sliderWrapper{
+  display: inline-block;
+}
+.slider{
+  height: 60vh;
+  width: calc(100vw / 24);
+  border: thin solid #ccc;
+}
+.sliderLabel {
+  height: 5vh;
+  text-align: center;
+  padding-top: 5vh;
+}
+.noUi-handle {
+  width: calc(100vw / 24)!important;
+  left: -1px !important;
+}
+.noUi-handle:before, .noUi-handle:after {
+  width:0;
+  display: none;
+
+}
+.noUi-connect{
+  background-color: #666;
+}
+.noUi-target{
+  background: none;
+}
+
+#scenez {
+  height: 30vh;
+  width: 100vw;
+
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-around;
+  align-content: center;
+  align-items: center;
+}
+
+.scene {
+  flex: 0 1 auto;
+  align-self: auto;
+  text-align: center;
+  min-width: 50px;
+  min-height: auto;
+  padding: 10px;
+  font-size: 4em;
+  border: thin solid #ccc;
+  border-radius: 5px;
+
+}
+
+#scenez #add {
+  font-size: 1em;
+  background-color: transparent;
+  border: none;
+}
+
+
+</style>
+<script>
+
+localObj.slug = 'dmx_ws';
+
+var dmxWs = {
+  elem: document.getElementById('dmxWs'),
+  scenezElem: function(){
+    return document.getElementById('scenez');
+  },
+  socketHost: 'ws://'+window.location.hostname+':8080',
+  socket: {},
+  checkSocketTimeout: {},
+  defaultBoardSliders:24,
+  dmxMessage: new Array(511),
+  scenez: [],
+  init: function(){
+    this.checkSocketTimeout = window.setTimeout(dmxWs.checkSocket, 100);
+
+    for(i=0;i<this.defaultBoardSliders;i++){
+      this.dmxMessage[i] = {
+        type: 'slider',
+        idx: i,
+        value: 0
+      }
+
+      this.createSlider(i);
+
+    } //end for
+
+    var _scenez = document.createElement('div');
+    _scenez.id = 'scenez';
+
+    var scene = document.createElement('div');
+    scene.classList.add('scene');
+    var sceneBtn = document.createElement('button');
+    sceneBtn.id = 'add';
+    sceneBtn.innerHTML = "+";
+    sceneBtn.addEventListener('click', dmxWs.addScene);
+    scene.appendChild(sceneBtn);
+    _scenez.appendChild(scene);
+    
+    var _itemz = localObj.getItems();
+    if(_itemz && _itemz.length > 0){
+      this.scenez = _itemz;
+      _.each(_itemz ,function(item){
+        var _scene = document.createElement('div');
+        _scene.classList.add('scene');
+        _scene.id = _itemz.indexOf(item) + 1;
+        _scene.innerHTML = _scene.id;
+        _scene.addEventListener('click', dmxWs.sceneClick);
+        _scenez.appendChild(_scene);
+      });
+    }
+
+    this.elem.appendChild(_scenez);
+
+  },
+  addScene: function(){
+
+    //note: stringify&parse to dereference 
+    var _currentScene = JSON.parse(JSON.stringify(dmxWs.dmxMessage));
+    dmxWs.scenez.push( _currentScene );
+    var scene = document.createElement('div');
+    scene.classList.add('scene');
+    scene.id = dmxWs.scenez.length;
+
+    scene.addEventListener('click', dmxWs.sceneClick);
+
+    scene.innerHTML = scene.id;
+
+    dmxWs.scenezElem().appendChild(scene);
+
+    localObj.addItem(_currentScene);
+
+  },
+  sceneClick: function(e){
+    if( e.target.id && !isNaN(parseInt(e.target.id)) ){
+      var _sceneIdx = parseInt(e.target.id) - 1;
+      // console.log('sceneClick _sceneIdx:',_sceneIdx);
+      if(dmxWs.scenez[_sceneIdx] != undefined){
+        dmxWs.updateSliders(dmxWs.scenez[_sceneIdx]);
+      }
+    }
+  },
+  checkSocket: function(){
+    if(dmxWs.socket.readyState && dmxWs.socket.readyState == 1){
+      window.clearTimeout(dmxWs.checkSocketTimeout);
+      // console.log('checkSocket w00t!');
+      return true;
+    }else{
+      console.log('checkSocket...');
+      dmxWs.socket = new WebSocket(dmxWs.socketHost);
+      dmxWs.socket.addEventListener('open', function (event) {
+        dmxWs.socket.send(JSON.stringify({event: 'open'}));
+      });
+      // listen for stuff.
+      dmxWs.socket.addEventListener('message', function (event) {
+        console.log('new message!', event.data);
+        dmxWs.updateSliders(JSON.parse(event.data))
+      });
+
+
+      dmxWs.checkSocketTimeout = window.setTimeout(dmxWs.checkSocket, 2000);
+      return false;
+    }
+  },
+  createSlider: function(i){
+    var wrapper = document.createElement('div');
+    wrapper.classList.add('sliderWrapper');
+
+    var label = document.createElement('div');
+    label.innerHTML = parseFloat(i)+1;
+    label.classList.add('sliderLabel');
+
+    var slider = document.createElement('div');
+    slider.classList.add('slider');
+    slider.id = i;
+
+    noUiSlider.create(slider, {
+      start: 0,
+      connect: [true, false],
+      orientation: "vertical",
+      range: {
+        'min': 0,
+        'max': 255
+      },
+      direction: 'rtl'
+      // format: wNumb({
+      //   decimals: 0
+      // })
+    });
+
+    // Bind the color changing function
+    // to the slide event.
+    slider.noUiSlider.on('slide', dmxWs.setDmx);
+
+    wrapper.appendChild(slider);
+    wrapper.appendChild(label)
+    this.elem.appendChild(wrapper);
+  },
+  setDmx: function(val){
+    if( this.target.id && !isNaN(parseInt(this.target.id)) && !isNaN(parseInt(val)) ){
+      dmxWs.dmxMessage[parseInt(this.target.id)] = parseInt(val);
+      dmxWs.socket.send( JSON.stringify({ idx: this.target.id, value: parseInt(val) }));
+    }
+  },
+  updateSliders: function(_dmxArr){
+    // console.log('updateSliders _dmxArr:',_dmxArr);
+    _.each(_dmxArr, function(val,key){
+      var _elem = document.getElementById(key);
+      if( _elem && _elem.noUiSlider && dmxWs.dmxMessage[key] != val ){
+        // console.log('gonna update!')
+        dmxWs.dmxMessage[key] = parseInt(val);
+        _elem.noUiSlider.set(val);
+      }
+    });
+  }
+
+
+}
+
+dmxWs.init();
+
+</script>
+</html>
