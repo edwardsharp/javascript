@@ -1,0 +1,21 @@
+{
+  "name": "dmx_ws",
+  "description": "web interface for streaming microphone audio from (mobile) browser microphone to raspberry pi speaker(s).",
+  "main": "index.html",
+  "authors": [
+    "3dwardsharp"
+  ],
+  "license": "GPL-3.0",
+  "homepage": "https://github.com/edwardsharp/javascript",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "webrtc-adapter": "^3.3.2"
+  }
+}

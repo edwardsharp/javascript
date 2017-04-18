@@ -1,0 +1,17 @@
+{
+  "name": "mic_ws",
+  "version": "0.0.1",
+  "description": "web interface for streaming microphone audio from (mobile) browser microphone to raspberry pi speaker(s).",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "3dwardsharp",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "https": "^1.0.0",
+    "speaker": "^0.3.0",
+    "ws": "^2.2.3"
+  }
+}

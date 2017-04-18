@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+
+<script src="bower_components/webrtc-adapter/release/adapter.js"></script>
+
+</head>
+
+<body>
+<div id="micWs">
+&#x1f3a4;
+</div>
+<div id="stop" hidden>
+  <button id="stopBtn">stop</button>
+</div>
+<div id="log">
+</div>
+</body>
+<style>
+html, body{
+  margin:0;
+  padding:0;
+  font: monospace;
+  background-color: black;
+  color: white;
+}
+
+#micWs{
+  padding-top: -50px;
+  margin: 0;
+  width: 100%;
+  /*height: 100%;*/
+  padding-top: 1em;
+  font-size: 10em;
+  text-align: center;
+}
+
+#stop{
+  width: 100%;
+  padding: 25px, 25%;
+  text-align:center;
+}
+
+#stopBtn{
+  color: black;
+  font-size: 30px;
+  padding: 20px;
+}
+
+#log{
+  font-size: 20px;
+  overflow-y: scroll;
+  width: 100%;
+  text-align:center;
+}
+
+</style>
+<script>
+
+
+var micWs = {
+  mic: document.getElementById('micWs'),
+  stopElem: document.getElementById('stop'),
+  stopBtn: document.getElementById('stopBtn'),
+  socketHost: 'wss://'+window.location.hostname+':8080',
+  socket: {},
+  socketConnected: false,
+  checkSocketTimeout: {},
+  audioCtx: undefined,
+  audioInput: undefined,
+  init: function(){
+    this.checkSocketTimeout = window.setTimeout(micWs.checkSocket, 100);
+    this.mic.addEventListener('click', function (event) {
+      if(micWs.socketConnected){
+        micWs.log('trying to start microphone...');
+        micWs.initMicSession();
+      }else{
+        micWs.log('socket not connected yet. waiting.');
+      }
+    });
+    this.stopBtn.addEventListener('click', function (event) {
+      micWs.audioCtx.close().then(function() {
+        micWs.stopElem.hidden = true;
+        micWs.log('click the mic to send!',true);
+      });
+    });
+
+  },
+  initMicSession: function(){
+    micWs.stopElem.hidden = false;
+
+    var session = {
+      audio: true,
+      video: false
+    };
+    // hmm navigator.mediaDevices.getUserMedia
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+    if(navigator.getUserMedia){
+      navigator.getUserMedia(session, micWs.initializeRecorder, micWs.onError);
+    }else{
+      micWs.log('no microphone access!');
+    }
+
+  },
+  checkSocket: function(){
+    if(micWs.socket.readyState && micWs.socket.readyState == 1){
+      window.clearTimeout(micWs.checkSocketTimeout);
+      micWs.log('click the mic to send!',true);
+      micWs.socketConnected = true;
+      return true;
+    }else{
+      micWs.log('loading...');
+      micWs.socket = new WebSocket(micWs.socketHost);
+      micWs.socket.addEventListener('open', function (event) {
+        // micWs.socket.send(JSON.stringify({event: 'open'}));
+        micWs.log('connected!');
+        micWs.socketConnected = true;
+      });
+      micWs.socket.addEventListener('close', function (event) {
+        // micWs.socket.send(JSON.stringify({event: 'open'}));
+        micWs.log('connection closed! code:',event.code,', reason:event.reason',event.reason,' wasClean:',event.wasClean);
+        micWs.socketConnected = false;
+      });
+      micWs.socket.addEventListener('error', micWs.onError);
+      // listen for stuff.
+      micWs.socket.addEventListener('message', function (event) {
+        micWs.log('new message!', event.data);
+        
+      });
+
+      micWs.checkSocketTimeout = window.setTimeout(micWs.checkSocket, 2000);
+      return false;
+    }
+  },
+  initializeRecorder: function(stream) {
+
+    if(window.AudioContext){
+      micWs.audioCtx = new window.AudioContext;
+    }else if(window.Audio){
+      micWs.audioCtx = new window.Audio;
+    }
+    
+    micWs.audioInput = micWs.audioCtx.createMediaStreamSource(stream);
+    var bufferSize = 2048;
+    // create a javascript node
+    var recorder;
+    var _log = '';
+    try{
+      recorder = micWs.audioCtx.createJavaScriptNode(bufferSize, 1, 1);
+    }catch(e){
+      try{
+        _log += 'o noz! caught error with createJavaScriptNode(), error was:'
+        _log += e
+        recorder = micWs.audioCtx.createScriptProcessor(bufferSize, 1, 1);
+      }catch(e){
+        //o noz!
+        micWs.log(_log);
+        micWs.log('caught error with createScriptProcessor() :/ e:', e);
+      }
+      
+    }
+    // specify the processing function
+    recorder.onaudioprocess = micWs.recorderProcess;
+    // connect stream to our recorder
+    micWs.audioInput.connect(recorder);
+    // connect our recorder to the previous destination
+    recorder.connect(micWs.audioCtx.destination);
+    micWs.log('connected!',true);
+    micWs.stopElem.hidden = false;
+  },
+  onError: function(e){
+    micWs.stopElem.hidden = true;
+    micWs.log('onError! e:',e);
+  },
+  convertFloat32ToInt16: function(buffer) {
+    l = buffer.length;
+    buf = new Int16Array(l);
+    while (l--) {
+      buf[l] = Math.min(1, buffer[l])*0x7FFF;
+    }
+    return buf.buffer;
+  },
+  recorderProcess: function(e) {
+    var left = e.inputBuffer.getChannelData(0);
+    micWs.socket.send(micWs.convertFloat32ToInt16(left));
+  },
+  logElem: document.getElementById('log'),
+  log: function(msg,clear){
+    try{
+      console.log(msg);
+    }catch(e){
+      //o noz!
+    }
+    if(clear){
+      micWs.logElem.innerHTML = msg;
+    }else{
+      micWs.logElem.innerHTML += msg;
+    }
+    
+  }
+
+
+}
+
+micWs.init();
+
+</script>
+</html>
