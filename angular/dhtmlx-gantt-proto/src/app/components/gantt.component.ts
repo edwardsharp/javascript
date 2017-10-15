@@ -415,6 +415,7 @@ export class GanttComponent implements OnInit {
 
 		Promise.all([this.taskService.get(), this.linkService.get()])
 			.then(([data, links]) => {
+				console.log('gonna gantt.parse data,links:',data,links);
 				gantt.parse({data, links});
 			});
 	}

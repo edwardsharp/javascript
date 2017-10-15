@@ -34,7 +34,7 @@ export class TaskService {
 			.catch(HandleError);
 	}
 
-	remove(id: number): Promise<void> {
+	remove(id: string): Promise<void> {
 		return this.http.delete(`${this.taskUrl}/${id}`)
 			.toPromise()
 			.then(ExtractData)

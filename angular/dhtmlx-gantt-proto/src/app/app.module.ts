@@ -18,7 +18,7 @@ import {GanttComponent} from "./components/gantt.component";
      BrowserModule,
      FormsModule,
      HttpModule,
-     InMemoryWebApiModule.forRoot(InMemoryDataService)
+     InMemoryWebApiModule.forRoot(InMemoryDataService, { dataEncapsulation: true })
   ],
   providers: [],
   bootstrap: [AppComponent]
