@@ -1,0 +1,28 @@
+@import "../node_modules/dhtmlx-gantt/codebase/dhtmlxgantt.css";
+html,body{
+	padding: 0;
+	margin: 0;
+}
+.gantt_task_progress{
+	text-align:left;
+	padding-left: 3px;
+  box-sizing: border-box;
+	color:white;
+	font-weight: bold;
+}
+.highlighted-column {
+	background-color:#fff3a1;
+}
+.gantt_task_scale .gantt_scale_cell{
+	cursor: default;
+}
+.gantt_task_scale .gantt_scale_cell.highlighted-column {
+	color: #454545;
+	font-weight: bold;
+}
+.gantt_task_cell.no_work_hour{
+	background-color: #F5F5F5;
+}
+.gantt_task_row.gantt_selected .gantt_task_cell.no_work_hour{
+	background-color: #F8EC9C;
+}
