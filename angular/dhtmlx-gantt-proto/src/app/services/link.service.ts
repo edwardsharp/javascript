@@ -1,41 +1,50 @@
 import {Injectable} from "@angular/core";
 import {Link} from "../models/link";
-import {Http} from "@angular/http";
 import {ExtractData, HandleError} from "./service-helper";
 
-import 'rxjs/add/operator/toPromise';
+declare var PouchDB:any;
 
 @Injectable()
 export class LinkService {
-	private linkUrl = "api/links";
 
-	constructor(private http: Http) {}
+	links: Array<Link>;
+	db: any;
 
-	get(): Promise<Link[]> {
-		return this.http.get(this.linkUrl)
-			.toPromise()
-			.then(ExtractData)
+	constructor() {
+		this.initDb();
+	}
+
+	initDb(): void{
+  	if(navigator.vendor && navigator.vendor.indexOf('Apple') > -1){
+  		console.log("LOADING FRUITDONW DB!");
+      this.db = new PouchDB('links', {adapter: 'fruitdown'});
+    }else{
+      this.db = new PouchDB('links');
+    }
+  }
+
+	get(): Promise<Link[]>{
+		return this.db.allDocs({
+		  include_docs: true,
+		  attachments: false
+		}).then(ExtractData)
 			.catch(HandleError);
 	}
 
 	insert(link: Link): Promise<Link> {
-		return this.http.post(this.linkUrl, JSON.stringify(link))
-			.toPromise()
+		return this.db.put(link)
 			.then(ExtractData)
 			.catch(HandleError);
 	}
+
 
 	update(link: Link): Promise<void> {
-		return this.http.put(`${this.linkUrl}/${link.id}`, JSON.stringify(link))
-			.toPromise()
+		return this.db.put(link)
 			.then(ExtractData)
 			.catch(HandleError);
 	}
 
-	remove(id: number): Promise<void> {
-		return this.http.delete(`${this.linkUrl}/${id}`)
-			.toPromise()
-			.then(ExtractData)
-			.catch(HandleError);
+	remove(link: Link): Promise<void> {
+		return this.db.remove(link._id,link._rev);
 	}
 }

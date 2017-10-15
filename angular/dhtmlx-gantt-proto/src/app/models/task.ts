@@ -1,5 +1,6 @@
 export class Task {
-	id: string;
+	_id: string;
+	_rev: string;
 	start_date: string;
 	text: string;
 	progress: number;

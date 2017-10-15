@@ -1,5 +1,6 @@
 export class Link {
-	id: string;
+	_id: string;
+	_rev: string;
 	source: string;
 	target: string;
 	type: string;

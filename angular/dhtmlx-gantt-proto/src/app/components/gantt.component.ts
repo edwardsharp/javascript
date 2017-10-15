@@ -272,7 +272,7 @@ export class GanttComponent implements OnInit {
 
 		//constraintz
 		gantt.templates.task_class = function(st,end,item){
-			return gantt.getChildren(item.id).length ? "gantt_project" : "";
+			return gantt.getChildren(item._id).length ? "gantt_project" : "";
 		};
 		// gantt.init("gantt_here");
 
@@ -382,8 +382,8 @@ export class GanttComponent implements OnInit {
 		gantt.attachEvent("onAfterTaskAdd", (id, item) => {
 			this.taskService.insert(this.serializeTask(item, true))
 				.then((response)=> {
-					if (response.id != id) {
-						gantt.changeTaskId(id, response.id);
+					if (response._id != id) {
+						gantt.changeTaskId(id, response._id);
 					}
 				});
 		});
@@ -399,8 +399,8 @@ export class GanttComponent implements OnInit {
 		gantt.attachEvent("onAfterLinkAdd", (id, item) => {
 			this.linkService.insert(this.serializeLink(item, true))
 				.then((response) => {
-					if(response.id != id){
-						gantt.changeLinkId(id, response.id);
+					if(response._id != id){
+						gantt.changeLinkId(id, response._id);
 					}
 				});
 		});
@@ -428,6 +428,16 @@ export class GanttComponent implements OnInit {
 		return this.serializeItem(data, insert) as Link;
 	}
 
+	private guid(): string {
+	  function s4() {
+	    return Math.floor((1 + Math.random()) * 0x10000)
+	      .toString(16)
+	      .substring(1);
+	  }
+	  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+	    s4() + '-' + s4() + s4() + s4();
+	}
+
 	private serializeItem(data: any, insert: boolean): any{
 		var result = {};
 
@@ -442,6 +452,9 @@ export class GanttComponent implements OnInit {
 			}
 		}
 
+		result['_id'] = result['_id'] || this.guid();
+		result['id'] = result['_id'];
+		console.log('serializeItem result',result);
 		return result;
 	}
 }
