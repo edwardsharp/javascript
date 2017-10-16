@@ -1,0 +1,12 @@
+<div id="gantt-nav" role="group">
+  <button type="button" (click)="changeViewMode('Quarter Day')">Quarter Day</button>
+  <button type="button" (click)="changeViewMode('Half Day')">Half Day</button>
+  <button type="button" (click)="changeViewMode('Day')">Day</button>
+  <button type="button" (click)="changeViewMode('Week')">Week</button>
+  <button type="button"  (click)="changeViewMode('Month')"class="active">Month</button>
+
+  <button type="butotn" (click)="addRandomTask()">add task</button>
+</div>
+<div id="gantt-wrapper">
+	<svg id="gantt"></svg>
+</div>
