@@ -8,6 +8,7 @@ import "dhtmlx-gantt";
 import "dhtmlx-gantt/codebase/ext/dhtmlxgantt_marker";
 import "dhtmlx-gantt/codebase/ext/dhtmlxgantt_undo";
 import "dhtmlx-gantt/codebase/ext/dhtmlxgantt_keyboard_navigation";
+// import "dhtmlx-gantt/codebase/ext/dhtmlxgantt_smart_rendering";
 
 import {} from "@types/dhtmlxgantt";
 
@@ -52,6 +53,8 @@ import {} from "@types/dhtmlxgantt";
 		
 		<input value="Undo" type="button" onclick='gantt.undo()' style='margin:20px;'>
 		<input value="Redo" type="button" onclick='gantt.redo()' style='margin:20px;'>
+
+		<button type="button" (click)="resetDb()" style='margin:20px;'>Reset DB</button>
 		</header>
 		<div #gantt_here class='app-gantt'></div>`,
 })
@@ -77,13 +80,6 @@ export class GanttComponent implements OnInit {
 		    today.title = date_to_str(today.start_date);
 		    gantt.updateMarker(todayMarker);
 		}, 1000*60);
-
-		gantt.config.scale_unit = "month";
-		gantt.config.date_scale = "%F, %Y";
-		gantt.config.scale_height = 50;
-		gantt.config.subscales = [
-			{unit:"day", step:1, date:"%j, %D" }
-		];
 
 		gantt.templates.rightside_text = function(start, end, task){
 			if(task.type == gantt.config.types.milestone){
@@ -113,6 +109,8 @@ export class GanttComponent implements OnInit {
 			return true;
 		});
 
+		// gantt.config['autoscroll'] = true;
+		
 
 		function setScaleConfig(value){
 			switch (value) {
@@ -150,6 +148,7 @@ export class GanttComponent implements OnInit {
 					break;
 				case "2":
 					gantt.config.work_time = false;
+
 					gantt.config.scale_unit = "year";
 					gantt.config.step = 1;
 					gantt.config.date_scale = "%Y";
@@ -166,12 +165,13 @@ export class GanttComponent implements OnInit {
 				case "3":
 					//work work work time
 					gantt.config.work_time = true;
-
-					gantt.config.scale_unit = "day";
-					gantt.config.date_scale = "%l, %F %d";
-					gantt.config.min_column_width = 33;
+					gantt.config.skip_off_time = true;
+										
+					gantt.config.scale_unit = "hour";
+					gantt.config.date_scale = " ";
+					gantt.config.min_column_width = 5;
 					gantt.config.duration_unit = "hour";
-					gantt.config.scale_height = 20*3;
+					gantt.config.scale_height = 50;
 
 					gantt.templates.task_cell_class = function(task, date){
 						if(!gantt.isWorkTime(date, 'hour')){
@@ -181,47 +181,28 @@ export class GanttComponent implements OnInit {
 						return "";
 					};
 
-					var weekScaleTemplate = function(date){
-						var dateToStr = gantt.date.date_to_str("%d %M");
-						var weekNum = gantt.date.date_to_str("(week %W)");
-						var endDate = gantt.date.add(gantt.date.add(date, 1, "week"), -1, "day");
-						return dateToStr(date) + " - " + dateToStr(endDate) + " " + weekNum(date);
-					};
+					// var weekScaleTemplate = function(date){
+					// 	var dateToStr = gantt.date.date_to_str("%d %M");
+					// 	var weekNum = gantt.date.date_to_str("(week %W)");
+					// 	var endDate = gantt.date.add(gantt.date.add(date, 1, "week"), -1, "day");
+					// 	return dateToStr(date) + " - " + dateToStr(endDate) + " " + weekNum(date);
+					// };
 
 					gantt.config.subscales = [
-						{unit:"week", step:1, template:weekScaleTemplate},
-						{unit:"hour", step:3, date:"%g%a"}
+						{unit:"day", step:1, date: "%D, %M %Y"},
+						{unit:"hour", step:4, date:"%G"}
 
 					];
 
-					gantt.setWorkTime({hours : [8,18]});//global working hours
-					// gantt.setWorkTime({day : 2, hours : false});// make Tuesdays day-off
-					// gantt.setWorkTime({day : 5, hours : [8,12]});//Fridays and Saturdays are short days
-					// gantt.setWorkTime({day : 6, hours : [8,12]});//Saturdays are also work days
-					// gantt.setWorkTime({date : new Date(2013, 2, 31)});//specific working day
+					gantt.setWorkTime({hours : [8,20]});//global working hours
+					
 
-					// var hints = [
-					// 	"Global working time is: <b>8:00-17:00</b>",
-					// 	"<b>Tuesdays</b> are not working days",
-					// 	"<b>Saturdays</b> are working days",
-					// 	"<b>Saturdays</b> and <b>Fridays</b> are short days",
-					// 	"<b>Sunday, 31th March</b> is working day"
-					// ];
-					// for(var i=0; i < hints.length; i++){
-					// 	setTimeout(
-					// 		(function(i){
-					// 			return function(){
-					// 				gantt.message(hints[i]);
-					// 			} })(i)
-					// 		, (i+1)*600);
-					// }
-
-					gantt['ignore_time'] = function(date){
-						if(date.getHours() < 8 || date.getHours() > 16){
-							return true;
-						}
-						return false;
-					};
+					// gantt['ignore_time'] = function(date){
+					// 	if(date.getHours() < 8 || date.getHours() > 16){
+					// 		return true;
+					// 	}
+					// 	return false;
+					// };
 				break;
 			}
 		}
@@ -294,6 +275,8 @@ export class GanttComponent implements OnInit {
 			task.start_date = new Date(limit.start_date)
 		}
 
+	  var wait = false,
+      delay = 500;
 		gantt.attachEvent("onTaskDrag", function(id, mode, task, original, e){
 			var parent = task.parent ? gantt.getTask(task.parent) : null,
 				children = gantt.getChildren(id),
@@ -375,17 +358,24 @@ export class GanttComponent implements OnInit {
 		})();
 
 
+		// gantt.config['autoscroll'] = true;
+		// gantt.config['autoscroll_speed'] = 50;
+
 
 		//   O K A Y   G O ! !
 		gantt.init(this.ganttContainer.nativeElement);
 
 		gantt.attachEvent("onAfterTaskAdd", (id, item) => {
+			// console.log('taskService gonna insert:',this.serializeTask(item, true));
 			this.taskService.insert(this.serializeTask(item, true))
 				.then((response)=> {
+					console.log('onAfterTaskAdd gonna changeTaskId id, response',id, response);
 					if (response._id != id) {
+						console.log('onAfterTaskAdd gonna changeTaskId response:', response);
 						gantt.changeTaskId(id, response._id);
 					}
-				});
+				}
+				);
 		});
 
 		gantt.attachEvent("onAfterTaskUpdate", (id, item) => {
@@ -418,6 +408,11 @@ export class GanttComponent implements OnInit {
 				console.log('gonna gantt.parse data,links:',data,links);
 				gantt.parse({data, links});
 			});
+	}
+
+	resetDb(): void{
+		this.taskService.resetDb();
+		gantt.clearAll();
 	}
 
 	private serializeTask(data: any, insert: boolean = false): Task {
@@ -454,7 +449,7 @@ export class GanttComponent implements OnInit {
 
 		result['_id'] = result['_id'] || this.guid();
 		result['id'] = result['_id'];
-		console.log('serializeItem result',result);
+		// console.log('serializeItem result',result);
 		return result;
 	}
 }

@@ -25,7 +25,17 @@ export class TaskService {
     }
   }
 
+  resetDb(): void{
+  	this.db.destroy().then( response => {
+		  // success
+		  this.initDb();
+		}).catch(function (err) {
+		  console.log(err);
+		});
+  }
+
 	get(): Promise<Task[]>{
+		console.log('getting all docz');
 		return this.db.allDocs({
 		  include_docs: true,
 		  attachments: false
@@ -33,9 +43,29 @@ export class TaskService {
 			.catch(HandleError);
 	}
 
-	insert(task: Task): Promise<Task> {
-		return this.db.put(task)
+	getTask(_id: string): Promise<Task>{
+		console.log('getTask _id:',_id);
+		return this.db.get(_id)
 			.then(ExtractData)
+			.catch(HandleError);
+	}
+
+	insert(task: Task): Promise<Task> {
+		
+
+		return this.db.put(task)
+			.then( response => {
+				if(response.ok){
+
+					console.log("taskService insert okay, now fetching task...");
+					return Promise.resolve(task);
+					// return this.getTask(response.id)
+					// 	.then(ExtractData)
+					// 	.catch(HandleError);
+				}else{
+					return Promise.reject(task);
+				}
+			})
 			.catch(HandleError);
 	}
 
@@ -47,6 +77,8 @@ export class TaskService {
 	}
 
 	remove(task: Task): Promise<void> {
-		return this.db.remove(task._id,task._rev);
+		if(task._id && task._rev){
+			return this.db.remove(task._id,task._rev);
+		}
 	}
 }
