@@ -1,5 +1,5 @@
 export function ExtractData(response: any): any {
-	console.log('ExtractData response:',response);
+	// console.log('ExtractData response:',response);
 	if(response.rows && response.rows[0] && response.rows[0].doc){
     return response.rows.map( r => r.doc );
   }else{

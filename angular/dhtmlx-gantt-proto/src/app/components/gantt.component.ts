@@ -252,69 +252,69 @@ export class GanttComponent implements OnInit {
 
 
 		//constraintz
-		gantt.templates.task_class = function(st,end,item){
-			return gantt.getChildren(item._id).length ? "gantt_project" : "";
-		};
-		// gantt.init("gantt_here");
+		// gantt.templates.task_class = function(st,end,item){
+		// 	return gantt.getChildren(item._id).length ? "gantt_project" : "";
+		// };
+		// // gantt.init("gantt_here");
 
-		function limitMoveLeft(task, limit){
-			var dur = task.end_date - task.start_date;
-			task.end_date = new Date(limit.end_date);
-			task.start_date = new Date(+task.end_date - dur);
-		}
-		function limitMoveRight(task, limit){
-			var dur = task.end_date - task.start_date;
-			task.start_date = new Date(limit.start_date);
-			task.end_date = new Date(+task.start_date + dur);
-		}
+		// function limitMoveLeft(task, limit){
+		// 	var dur = task.end_date - task.start_date;
+		// 	task.end_date = new Date(limit.end_date);
+		// 	task.start_date = new Date(+task.end_date - dur);
+		// }
+		// function limitMoveRight(task, limit){
+		// 	var dur = task.end_date - task.start_date;
+		// 	task.start_date = new Date(limit.start_date);
+		// 	task.end_date = new Date(+task.start_date + dur);
+		// }
 
-		function limitResizeLeft(task, limit){
-			task.end_date = new Date(limit.end_date);
-		}
-		function limitResizeRight(task, limit){
-			task.start_date = new Date(limit.start_date)
-		}
+		// function limitResizeLeft(task, limit){
+		// 	task.end_date = new Date(limit.end_date);
+		// }
+		// function limitResizeRight(task, limit){
+		// 	task.start_date = new Date(limit.start_date)
+		// }
 
-	  var wait = false,
-      delay = 500;
-		gantt.attachEvent("onTaskDrag", function(id, mode, task, original, e){
-			var parent = task.parent ? gantt.getTask(task.parent) : null,
-				children = gantt.getChildren(id),
-				modes = gantt.config.drag_mode;
+	 //  var wait = false,
+  //     delay = 500;
+		// gantt.attachEvent("onTaskDrag", function(id, mode, task, original, e){
+		// 	var parent = task.parent ? gantt.getTask(task.parent) : null,
+		// 		children = gantt.getChildren(id),
+		// 		modes = gantt.config.drag_mode;
 
-			var limitLeft = null,
-				limitRight = null;
+		// 	var limitLeft = null,
+		// 		limitRight = null;
 
-			if(!(mode == modes.move || mode == modes.resize)) return;
+		// 	if(!(mode == modes.move || mode == modes.resize)) return;
 
-			if(mode == modes.move){
-				limitLeft = limitMoveLeft;
-				limitRight = limitMoveRight;
-			}else if(mode == modes.resize){
-				limitLeft = limitResizeLeft;
-				limitRight = limitResizeRight;
-			}
+		// 	if(mode == modes.move){
+		// 		limitLeft = limitMoveLeft;
+		// 		limitRight = limitMoveRight;
+		// 	}else if(mode == modes.resize){
+		// 		limitLeft = limitResizeLeft;
+		// 		limitRight = limitResizeRight;
+		// 	}
 
-			//check parents constraints
-			if(parent && +parent.end_date < +task.end_date){
-				limitLeft(task, parent);
-			}
-			if(parent && +parent.start_date > +task.start_date){
-				limitRight(task, parent);
-			}
+		// 	//check parents constraints
+		// 	if(parent && +parent.end_date < +task.end_date){
+		// 		limitLeft(task, parent);
+		// 	}
+		// 	if(parent && +parent.start_date > +task.start_date){
+		// 		limitRight(task, parent);
+		// 	}
 
-			//check children constraints
-			for(var i=0; i < children.length; i++){
-				var child = gantt.getTask(children[i]);
-				if(+task.end_date < +child.end_date){
-					limitLeft(task, child);
-				}else if(+task.start_date > +child.start_date){
-					limitRight(task, child)
-				}
-			}
+		// 	//check children constraints
+		// 	for(var i=0; i < children.length; i++){
+		// 		var child = gantt.getTask(children[i]);
+		// 		if(+task.end_date < +child.end_date){
+		// 			limitLeft(task, child);
+		// 		}else if(+task.start_date > +child.start_date){
+		// 			limitRight(task, child)
+		// 		}
+		// 	}
 
 
-		});
+		// });
 
 
 
@@ -366,21 +366,15 @@ export class GanttComponent implements OnInit {
 		gantt.init(this.ganttContainer.nativeElement);
 
 		gantt.attachEvent("onAfterTaskAdd", (id, item) => {
-			// console.log('taskService gonna insert:',this.serializeTask(item, true));
 			this.taskService.insert(this.serializeTask(item, true))
 				.then((response)=> {
-					console.log('onAfterTaskAdd gonna changeTaskId id, response',id, response);
-					if (response._id != id) {
-						console.log('onAfterTaskAdd gonna changeTaskId response:', response);
-						gantt.changeTaskId(id, response._id);
-					}
+					if (response._id != id) { gantt.changeTaskId(id, response._id); }
 				});
 		});
 
 		gantt.attachEvent("onAfterTaskUpdate", (id, item) => {
-			console.log('onAfterTaskUpdate id,item',id,item);
-			// this.taskService.update(this.serializeTask(item));
 			this.taskService.update(this.serializeTask(item)).then((task)=> {
+				item._rev = task['_rev'];
 				return task;
 			});
 		});
@@ -408,7 +402,7 @@ export class GanttComponent implements OnInit {
 
 		Promise.all([this.taskService.get(), this.linkService.get()])
 			.then(([data, links]) => {
-				console.log('gonna gantt.parse data,links:',data,links);
+				// console.log('gonna gantt.parse data,links:',data,links);
 				gantt.parse({data, links});
 			});
 	}
@@ -453,7 +447,7 @@ export class GanttComponent implements OnInit {
 		result['_id'] = result['_id'] || result['id'] || this.guid();
 		result['id'] = result['_id'];
 		result['_rev'] = result['_rev'] || data['_rev'];
-		console.log('serializeItem data,result',data,result);
+		// console.log('serializeItem data,result',data,result);
 		return result;
 	}
 }

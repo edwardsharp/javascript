@@ -35,7 +35,7 @@ export class TaskService {
   }
 
 	get(): Promise<Task[]>{
-		console.log('getting all docz');
+		// console.log('getting all docz');
 		return this.db.allDocs({
 		  include_docs: true,
 		  attachments: false
@@ -44,7 +44,7 @@ export class TaskService {
 	}
 
 	getTask(_id: string): Promise<Task>{
-		console.log('getTask _id:',_id);
+		// console.log('getTask _id:',_id);
 		return this.db.get(_id)
 			.then(ExtractData)
 			.catch(HandleError);
@@ -61,10 +61,11 @@ export class TaskService {
 	}
 
 	update(task: Task): Promise<void> {
-		console.log('gonna update task:',task);
+		// console.log('gonna update task:',task);
 		return this.db.put(task)
 			.then( response => {
 				if(response.ok){
+					task._rev = response.rev;
 					return Promise.resolve(task);
 				}else{ return Promise.reject(task); }
 			})
