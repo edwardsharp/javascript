@@ -225,29 +225,29 @@ export class GanttComponent implements OnInit {
 
 
 		//selected col highlight
-		var selected_column = null;
+		// var selected_column = null;
 
-		gantt.attachEvent("onScaleClick", function (e, date) {
-			selected_column = date;
-			var pos = gantt.getScrollState();
-			gantt.render();
-			gantt.scrollTo(pos.x, pos.y);
-		});
+		// gantt.attachEvent("onScaleClick", function (e, date) {
+		// 	selected_column = date;
+		// 	var pos = gantt.getScrollState();
+		// 	gantt.render();
+		// 	gantt.scrollTo(pos.x, pos.y);
+		// });
 
-		function is_selected_column (column_date){
-			if(selected_column && column_date.valueOf() == selected_column.valueOf()){
-				return true;
-			}
-			return false;
-		}
-		gantt.templates.scale_cell_class = function (date) {
-			if(is_selected_column(date))
-				return "highlighted-column";
-		};
-		gantt.templates.task_cell_class = function (item, date) {
-			if(is_selected_column(date))
-				return "highlighted-column";
-		};
+		// function is_selected_column (column_date){
+		// 	if(selected_column && column_date.valueOf() == selected_column.valueOf()){
+		// 		return true;
+		// 	}
+		// 	return false;
+		// }
+		// gantt.templates.scale_cell_class = function (date) {
+		// 	if(is_selected_column(date))
+		// 		return "highlighted-column";
+		// };
+		// gantt.templates.task_cell_class = function (item, date) {
+		// 	if(is_selected_column(date))
+		// 		return "highlighted-column";
+		// };
 
 
 
@@ -374,12 +374,15 @@ export class GanttComponent implements OnInit {
 						console.log('onAfterTaskAdd gonna changeTaskId response:', response);
 						gantt.changeTaskId(id, response._id);
 					}
-				}
-				);
+				});
 		});
 
 		gantt.attachEvent("onAfterTaskUpdate", (id, item) => {
-			this.taskService.update(this.serializeTask(item));
+			console.log('onAfterTaskUpdate id,item',id,item);
+			// this.taskService.update(this.serializeTask(item));
+			this.taskService.update(this.serializeTask(item)).then((task)=> {
+				return task;
+			});
 		});
 
 		gantt.attachEvent("onAfterTaskDelete", (id) => {
@@ -447,9 +450,10 @@ export class GanttComponent implements OnInit {
 			}
 		}
 
-		result['_id'] = result['_id'] || this.guid();
+		result['_id'] = result['_id'] || result['id'] || this.guid();
 		result['id'] = result['_id'];
-		// console.log('serializeItem result',result);
+		result['_rev'] = result['_rev'] || data['_rev'];
+		console.log('serializeItem data,result',data,result);
 		return result;
 	}
 }

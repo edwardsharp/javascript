@@ -51,28 +51,23 @@ export class TaskService {
 	}
 
 	insert(task: Task): Promise<Task> {
-		
-
 		return this.db.put(task)
 			.then( response => {
 				if(response.ok){
-
-					console.log("taskService insert okay, now fetching task...");
 					return Promise.resolve(task);
-					// return this.getTask(response.id)
-					// 	.then(ExtractData)
-					// 	.catch(HandleError);
-				}else{
-					return Promise.reject(task);
-				}
+				}else{ return Promise.reject(task); }
 			})
 			.catch(HandleError);
 	}
 
-
 	update(task: Task): Promise<void> {
+		console.log('gonna update task:',task);
 		return this.db.put(task)
-			.then(ExtractData)
+			.then( response => {
+				if(response.ok){
+					return Promise.resolve(task);
+				}else{ return Promise.reject(task); }
+			})
 			.catch(HandleError);
 	}
 
